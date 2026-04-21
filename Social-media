@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SocialHub - Connect, Share & Message</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, 'Segoe UI', 'Inter', -apple-system, sans-serif;
+    }
+
+    body {
+      background: #f0f2f5;
+      color: #1e293b;
+    }
+
+    /* Auth Modal (Login/Signup) */
+    .auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-modal {
+      background: white;
+      border-radius: 2rem;
+      width: 90%;
+      max-width: 420px;
+      padding: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+    }
+
+    .auth-modal h2 {
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .auth-btn {
+      width: 100%;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+
+    .switch-auth {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #2563eb;
+      cursor: pointer;
+    }
+
+    .error-msg {
+      color: #dc2626;
+      font-size: 0.75rem;
+      margin-top: -0.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    /* Main App (hidden until logged in) */
+    .app-main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: none;
+    }
+
+    /* Top Nav */
+    .top-nav {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logout-btn {
+      background: #ef4444;
+      border: none;
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      color: white;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    /* Grid Layout */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1.2fr;
+      gap: 1.2rem;
+    }
+
+    /* Sidebar cards */
+    .card {
+      background: white;
+      border-radius: 1.25rem;
+      padding: 1rem;
+      margin-bottom: 1.2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.8rem;
+      border-left: 4px solid #2563eb;
+      padding-left: 0.6rem;
+    }
+
+    /* Stories */
+    .stories-container {
+      display: flex;
+      gap: 0.8rem;
+      overflow-x: auto;
+      padding-bottom: 0.3rem;
+    }
+
+    .story-item {
+      text-align: center;
+      min-width: 70px;
+      cursor: pointer;
+    }
+
+    .story-circle {
+      width: 65px;
+      height: 65px;
+      background: linear-gradient(145deg, #f59e0b, #ef4444);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 5px;
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .story-username {
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    .add-story {
+      background: #e2e8f0;
+      cursor: pointer;
+    }
+
+    /* Create Post */
+    .post-input-area {
+      display: flex;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .post-text {
+      flex: 1;
+      border: 1px solid #e2e8f0;
+      border-radius: 2rem;
+      padding: 0.7rem 1rem;
+      resize: none;
+    }
+
+    .post-btn {
+      background: #2563eb;
+      border: none;
+      border-radius: 2rem;
+      padding: 0 1.2rem;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Feed Posts */
+    .post {
+      background: white;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .post-avatar {
+      width: 40px;
+      height: 40px;
+      background: #8b5cf6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .post-user {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .post-time {
+      font-size: 0.7rem;
+      color: #6c757d;
+    }
+
+    .post-content {
+      margin: 0.5rem 0;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Messaging Panel */
+    .messages-area {
+      max-height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 0.8rem;
+    }
+
+    .chat-user {
+      padding: 0.6rem;
+      border-radius: 1rem;
+      cursor: pointer;
+      margin-bottom: 0.3rem;
+      background: #f8fafc;
+    }
+
+    .chat-user.active {
+      background: #dbeafe;
+    }
+
+    .chat-window {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 0.8rem;
+    }
+
+    .messages-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .message-bubble {
+      background: #e2e8f0;
+      padding: 0.4rem 0.8rem;
+      border-radius: 1rem;
+      margin-bottom: 0.3rem;
+      max-width: 90%;
+    }
+
+    .my-message {
+      background: #2563eb;
+      color: white;
+      margin-left: auto;
+    }
+
+    .message-input-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Story Modal */
+    .story-viewer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      z-index: 1100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
+    }
+
+    .story-content {
+      background: #1e293b;
+      color: white;
+      padding: 2rem;
+      border-radius: 2rem;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Auth Modal -->
+<div id="authModal" class="auth-overlay">
+  <div class="auth-modal">
+    <h2 id="authTitle">Sign Up</h2>
+    <input type="text" id="authName" class="auth-input" placeholder="Full Name" autocomplete="off">
+    <input type="text" id="authUsername" class="auth-input" placeholder="Username" autocomplete="off">
+    <input type="password" id="authPassword" class="auth-input" placeholder="Password">
+    <div id="authError" class="error-msg"></div>
+    <button id="authSubmitBtn" class="auth-btn">Create Account</button>
+    <div id="switchAuthText" class="switch-auth">Already have an account? Login</div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="appMain" class="app-main">
+  <div class="top-nav">
+    <div class="logo">✨ SocialHub</div>
+    <div class="user-info">
+      <span id="currentUserName">User</span>
+      <button id="logoutBtn" class="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <!-- Left Column: Stories + Users -->
+    <div>
+      <div class="card">
+        <h3>📸 Stories</h3>
+        <div id="storiesList" class="stories-container"></div>
+        <button id="addStoryBtn" style="margin-top: 10px; width:100%; background:#f1f5f9; border:none; padding:6px; border-radius:2rem; cursor:pointer;">+ Add My Story</button>
+      </div>
+      <div class="card">
+        <h3>👥 All Users</h3>
+        <div id="usersList" style="max-height: 300px; overflow-y: auto;"></div>
+      </div>
+    </div>
+
+    <!-- Middle: Feed + Create Post -->
+    <div>
+      <div class="card">
+        <h3>📝 Create Post</h3>
+        <div class="post-input-area">
+          <textarea id="newPostText" class="post-text" rows="2" placeholder="What's happening?"></textarea>
+          <button id="createPostBtn" class="post-btn">Post</button>
+        </div>
+      </div>
+      <div class="card" style="padding: 0.5rem 1rem;">
+        <h3>📰 Feed</h3>
+        <div id="feedContainer"></div>
+      </div>
+    </div>
+
+    <!-- Right Column: Messaging -->
+    <div class="card">
+      <h3>💬 Messages</h3>
+      <div class="messages-area">
+        <div id="chatUsersList" class="chat-list"></div>
+        <div id="chatWindow" class="chat-window" style="display: none;">
+          <div id="chatHeader" style="font-weight:600; margin-bottom:5px;"></div>
+          <div id="messagesList" class="messages-list"></div>
+          <div class="message-input-group">
+            <input type="text" id="messageInput" placeholder="Type a message..." style="flex:1; padding:6px; border-radius:2rem; border:1px solid #ccc;">
+            <button id="sendMsgBtn" style="background:#2563eb; border:none; border-radius:2rem; padding:0 12px; color:white;">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Story Viewer Modal -->
+<div id="storyViewer" class="story-viewer">
+  <div class="story-content">
+    <h3 id="storyAuthor"></h3>
+    <p id="storyText" style="margin: 1rem 0;"></p>
+    <button id="closeStoryBtn" style="background:#ef4444; border:none; padding:6px 20px; border-radius:2rem; color:white;">Close</button>
+  </div>
+</div>
+
+<script>
+  // ---------- DATA MODELS (localStorage) ----------
+  let users = [];          // { id, name, username, password, avatarColor }
+  let posts = [];         // { id, userId, content, timestamp, likes, comments[] }
+  let stories = [];       // { id, userId, content, timestamp }
+  let messages = [];      // { id, fromUserId, toUserId, content, timestamp }
+
+  let currentUser = null;
+  let selectedChatUser = null;
+
+  // Helper: save & load
+  function loadData() {
+    const storedUsers = localStorage.getItem('socialhub_users');
+    const storedPosts = localStorage.getItem('socialhub_posts');
+    const storedStories = localStorage.getItem('socialhub_stories');
+    const storedMessages = localStorage.getItem('socialhub_messages');
+    
+    users = storedUsers ? JSON.parse(storedUsers) : [];
+    posts = storedPosts ? JSON.parse(storedPosts) : [];
+    stories = storedStories ? JSON.parse(storedStories) : [];
+    messages = storedMessages ? JSON.parse(storedMessages) : [];
+
+    // Add demo users if empty
+    if (users.length === 0) {
+      users.push({ id: 'u1', name: 'Alice Wonder', username: 'alice', password: '123', avatarColor: '#ec489a' });
+      users.push({ id: 'u2', name: 'Bob Builder', username: 'bob', password: '123', avatarColor: '#3b82f6' });
+      users.push({ id: 'u3', name: 'Charlie Day', username: 'charlie', password: '123', avatarColor: '#10b981' });
+      saveUsers();
+    }
+    // Demo posts
+    if (posts.length === 0 && users.length >= 2) {
+      posts.push({ id: 'p1', userId: 'u1', content: 'Hello world! Excited to join SocialHub 🚀', timestamp: Date.now() - 3600000, likes: ['u2'], comments: [{ userId: 'u2', text: 'Welcome!' }] });
+      posts.push({ id: 'p2', userId: 'u2', content: 'Working on amazing projects today!', timestamp: Date.now() - 7200000, likes: [], comments: [] });
+      savePosts();
+    }
+    // Demo stories
+    if (stories.length === 0 && users.length) {
+      stories.push({ id: 's1', userId: 'u1', content: 'Just finished a great book! 📚', timestamp: Date.now() - 500000 });
+      stories.push({ id: 's2', userId: 'u2', content: 'Sunset vibes 🌅', timestamp: Date.now() - 100000 });
+      saveStories();
+    }
+  }
+
+  function saveUsers() { localStorage.setItem('socialhub_users', JSON.stringify(users)); }
+  function savePosts() { localStorage.setItem('socialhub_posts', JSON.stringify(posts)); }
+  function saveStories() { localStorage.setItem('socialhub_stories', JSON.stringify(stories)); }
+  function saveMessages() { localStorage.setItem('socialhub_messages', JSON.stringify(messages)); }
+
+  // Auth helpers
+  function registerUser(name, username, password) {
+    if (users.find(u => u.username === username)) return { success: false, error: 'Username taken' };
+    const newUser = { id: 'u' + Date.now(), name, username, password, avatarColor: '#' + Math.floor(Math.random()*16777215).toString(16) };
+    users.push(newUser);
+    saveUsers();
+    return { success: true, user: newUser };
+  }
+
+  function loginUser(username, password) {
+    const user = users.find(u => u.username === username && u.password === password);
+    if (user) return { success: true, user };
+    return { success: false, error: 'Invalid credentials' };
+  }
+
+  // Render Functions
+  function renderStories() {
+    const container = document.getElementById('storiesList');
+    if (!container) return;
+    const userStories = stories.filter(s => s.timestamp > Date.now() - 86400000); // 24h
+    container.innerHTML = userStories.map(s => {
+      const user = users.find(u => u.id === s.userId);
+      return `<div class="story-item" data-story='${JSON.stringify(s)}'>
+                <div class="story-circle" style="background:${user?.avatarColor || '#ccc'}">📖</div>
+                <div class="story-username">${user?.name?.split(' ')[0] || 'user'}</div>
+              </div>`;
+    }).join('');
+    // attach story click
+    document.querySelectorAll('.story-item').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const storyData = JSON.parse(el.getAttribute('data-story'));
+        showStory(storyData);
+      });
+    });
+  }
+
+  function showStory(story) {
+    const user = users.find(u => u.id === story.userId);
+    document.getElementById('storyAuthor').innerText = user?.name || 'User';
+    document.getElementById('storyText').innerText = story.content;
+    document.getElementById('storyViewer').style.display = 'flex';
+  }
+
+  function renderUsersList() {
+    const container = document.getElementById('usersList');
+    if (!container) return;
+    container.innerHTML = users.filter(u => u.id !== currentUser?.id).map(u => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid #eef2f6;">
+        <span>👤 ${u.name} (@${u.username})</span>
+      </div>
+    `).join('');
+  }
+
+  function renderFeed() {
+    const container = document.getElementById('feedContainer');
+    if (!container) return;
+    const sorted = [...posts].sort((a,b) => b.timestamp - a.timestamp);
+    container.innerHTML = sorted.map(post => {
+      const user = users.find(u => u.id === post.userId);
+      const timeAgo = Math.floor((Date.now() - post.timestamp) / 60000);
+      const timeText = timeAgo < 1 ? 'just now' : `${timeAgo}m ago`;
+      const likeCount = post.likes?.length || 0;
+      const isLiked = post.likes?.includes(currentUser.id);
+      return `
+        <div class="post" data-postid="${post.id}">
+          <div class="post-header">
+            <div class="post-avatar" style="background:${user?.avatarColor || '#aaa'}">${user?.name?.charAt(0) || '?'}</div>
+            <div><div class="post-user">${user?.name || 'Unknown'}</div><div class="post-time">${timeText}</div></div>
+          </div>
+          <div class="post-content">${escapeHtml(post.content)}</div>
+          <div class="post-actions">
+            <button class="action-btn like-btn" data-postid="${post.id}">${isLiked ? '❤️' : '🤍'} ${likeCount}</button>
+            <button class="action-btn comment-toggle" data-postid="${post.id}">💬 Comment</button>
+          </div>
+          <div id="comments-${post.id}" style="margin-top:8px; display:none;">
+            <div>${(post.comments || []).map(c => `<div><strong>${users.find(u=>u.id===c.userId)?.name || 'user'}</strong>: ${escapeHtml(c.text)}</div>`).join('')}</div>
+            <div style="display:flex; gap:5px; margin-top:6px;"><input type="text" id="commentInput-${post.id}" placeholder="Write comment..." style="flex:1; padding:5px; border-radius:20px; border:1px solid #ccc;"><button class="add-comment-btn" data-postid="${post.id}">Post</button></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Like events
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const postId = btn.getAttribute('data-postid');
+        const post = posts.find(p => p.id === postId);
+        if (post) {
+          if (post.likes.includes(currentUser.id)) {
+            post.likes = post.likes.filter(id => id !== currentUser.id);
+          } else {
+            post.likes.push(currentUser.id);
+          }
+          savePosts();
+          renderFeed();
+        }
+      });
+    });
+    // Comment toggle & submit
+    document.querySelectorAll('.comment-toggle').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const pid = btn.getAttribute('data-postid');
+        const div = document.getElementById(`comments-${pid}`);
+        if (div) div.style.display = div.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+    document.querySelectorAll('.add-comment-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const pid = btn.getAttribute('data-postid');
+        const input = document.getElementById(`commentInput-${pid}`);
+        if (input && input.value.trim()) {
+          const post = posts.find(p => p.id === pid);
+          post.comments = post.comments || [];
+          post.comments.push({ userId: currentUser.id, text: input.value.trim() });
+          savePosts();
+          renderFeed();
+        }
+      });
+    });
+  }
+
+  function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+  // Messaging
+  function renderChatUsers() {
+    const container = document.getElementById('chatUsersList');
+    if (!container) return;
+    const otherUsers = users.filter(u => u.id !== currentUser.id);
+    container.innerHTML = otherUsers.map(u => `<div class="chat-user" data-userid="${u.id}">💬 ${u.name} (@${u.username})</div>`).join('');
+    document.querySelectorAll('.chat-user').forEach(el => {
+      el.addEventListener('click', () => {
+        const uid = el.getAttribute('data-userid');
+        selectedChatUser = users.find(u => u.id === uid);
+        renderChatWindow();
+      });
+    });
+  }
+
+  function renderChatWindow() {
+    const win = document.getElementById('chatWindow');
+    if (!selectedChatUser) { win.style.display = 'none'; return; }
+    win.style.display = 'block';
+    document.getElementById('chatHeader').innerHTML = `Chat with ${selectedChatUser.name}`;
+    const relevantMessages = messages.filter(m => (m.fromUserId === currentUser.id && m.toUserId === selectedChatUser.id) || (m.fromUserId === selectedChatUser.id && m.toUserId === currentUser.id));
+    relevantMessages.sort((a,b) => a.timestamp - b.timestamp);
+    const messagesHtml = relevantMessages.map(m => `<div class="message-bubble ${m.fromUserId === currentUser.id ? 'my-message' : ''}">${escapeHtml(m.content)}</div>`).join('');
+    document.getElementById('messagesList').innerHTML = messagesHtml || '<div style="color:gray;">No messages yet. Say hi!</div>';
+  }
+
+  function sendMessage(content) {
+    if (!selectedChatUser || !content.trim()) return;
+    const newMsg = { id: 'msg'+Date.now(), fromUserId: currentUser.id, toUserId: selectedChatUser.id, content: content.trim(), timestamp: Date.now() };
+    messages.push(newMsg);
+    saveMessages();
+    renderChatWindow();
+    document.getElementById('messageInput').value = '';
+  }
+
+  // Create Post
+  function createPost(content) {
+    if (!content.trim()) return;
+    const newPost = { id: 'p'+Date.now(), userId: currentUser.id, content: content.trim(), timestamp: Date.now(), likes: [], comments: [] };
+    posts.unshift(newPost);
+    savePosts();
+    renderFeed();
+    document.getElementById('newPostText').value = '';
+  }
+
+  // Add Story
+  function addStory(content) {
+    if (!content.trim()) return;
+    stories.push({ id: 's'+Date.now(), userId: currentUser.id, content: content.trim(), timestamp: Date.now() });
+    saveStories();
+    renderStories();
+  }
+
+  // UI after login
+  function renderApp() {
+    document.getElementById('currentUserName').innerText = currentUser.name;
+    renderStories();
+    renderUsersList();
+    renderFeed();
+    renderChatUsers();
+    if (selectedChatUser) renderChatWindow();
+    else document.getElementById('chatWindow').style.display = 'none';
+  }
+
+  // Auth UI handlers
+  let isLoginMode = false;
+  const authTitle = document.getElementById('authTitle');
+  const authSubmitBtn = document.getElementById('authSubmitBtn');
+  const switchText = document.getElementById('switchAuthText');
+
+  function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    authTitle.innerText = isLoginMode ? 'Login' : 'Sign Up';
+    authSubmitBtn.innerText = isLoginMode ? 'Login' : 'Create Account';
+    switchText.innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
+    document.getElementById('authError').innerText = '';
+  }
+
+  authSubmitBtn.onclick = () => {
+    const name = document.getElementById('authName').value;
+    const username = document.getElementById('authUsername').value;
+    const password = document.getElementById('authPassword').value;
+    const errorDiv = document.getElementById('authError');
+    if (!username || !password) { errorDiv.innerText = 'Username & password required'; return; }
+    if (!isLoginMode && !name) { errorDiv.innerText = 'Full name required'; return; }
+    
+    if (isLoginMode) {
+      const res = loginUser(username, password);
+      if (res.success) {
+        currentUser = res.user;
+        document.getElementById('authModal').style.display = 'none';
+        document.getElementById('appMain').style.display = 'block';
+        renderApp();
+      } else errorDiv.innerText = res.error;
+    } else {
+      const res = registerUser(name, username, password);
+      if (res.success) {
+        currentUser = res.user;
+        document.getElementById('authModal').style.display = 'none';
+        document.getElementById('appMain').style.display = 'block';
+        renderApp();
+      } else errorDiv.innerText = res.error;
+    }
+  };
+
+  switchText.onclick = toggleAuthMode;
+
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    currentUser = null;
+    document.getElementById('appMain').style.display = 'none';
+    document.getElementById('authModal').style.display = 'flex';
+    toggleAuthMode(); 
+    document.getElementById('authName').value = '';
+    document.getElementById('authUsername').value = '';
+    document.getElementById('authPassword').value = '';
+  });
+
+  document.getElementById('createPostBtn')?.addEventListener('click', () => {
+    const txt = document.getElementById('newPostText').value;
+    createPost(txt);
+  });
+
+  document.getElementById('addStoryBtn')?.addEventListener('click', () => {
+    const storyContent = prompt('What is your story?');
+    if (storyContent) addStory(storyContent);
+  });
+
+  document.getElementById('sendMsgBtn')?.addEventListener('click', () => {
+    const msg = document.getElementById('messageInput').value;
+    sendMessage(msg);
+  });
+
+  document.getElementById('closeStoryBtn')?.addEventListener('click', () => {
+    document.getElementById('storyViewer').style.display = 'none';
+  });
+
+  // init load data
+  loadData();
+  // start with auth mode signup default
+  isLoginMode = false;
+  toggleAuthMode();
+</script>
+</body>
+</html>
